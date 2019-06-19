@@ -1,5 +1,5 @@
 exports.up = function (knex, Promise) {
-	return knex.schema.createTable("todos", t => {
+	return knex.schema.createTable("t_todos", t => {
 		t.increments();
 		t.string("text");
 		t.timestamp("createdAt").notNullable().defaultTo(knex.raw("CURRENT_TIMESTAMP"));
@@ -8,5 +8,5 @@ exports.up = function (knex, Promise) {
 };
 
 exports.down = function (knex, Promise) {
-	return knex.schema.dropTable("todos");
+	return knex.schema.dropTable("t_todos");
 };

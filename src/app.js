@@ -6,6 +6,7 @@ const { Model } = require("objection");
 
 // Models
 const Todo = require("./model/Todo");
+const Author = require("./model/Author");
 
 //-----------------------------------------
 
@@ -24,6 +25,7 @@ const app = express();
 app.use(bodyParser.json());
 
 //-----------------------------------------
+//-----------------------------------------
 
 app.get("/todos/:id", async (req, res) => {
   const todo = await Todo.query().findById(req.params.id);
@@ -40,7 +42,7 @@ app.get("/todos/:id", async (req, res) => {
 app.get("/todos", async (req, res) => {
   console.log("Inner GET TODOS");
 
-  const todos = await Todo.query();
+  const todos = await Todo.query().eager('author').debug(true);
 
   if (todos) {
     //res.json({ todos });
@@ -51,6 +53,33 @@ app.get("/todos", async (req, res) => {
   }
 });
 
+//-----------------------------------------
+//-----------------------------------------
+
+app.get("/authors/:id", async (req, res) => {
+  const author = await Author.query().findById(req.params.id);
+
+  if (author) {
+    res.json({ author });
+  } else {
+    re.status(404).json({});
+  }
+});
+
+//-----------------------------------------
+
+app.get("/authors", async (req, res) => {
+  //const authors = await Author.query().allowEager('[todos, todos.author]').eager('[todos, todos.author]').debug(true);
+  const authors = await Author.query().allowEager('[todos, todos.[author]]').eager('[todos, todos.[author]]').debug(true);
+
+  if (authors) {
+    res.send(authors);
+  } else {
+    re.status(404).json({});
+  }
+});
+
+//-----------------------------------------
 //-----------------------------------------
 
 app.get("/*", (req, res) => {

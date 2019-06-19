@@ -14,9 +14,11 @@ module.exports = require('knex')(config);
 const Knex = require("knex");
 const connection = require("../knexfile");
 
+/*
 console.log('BEGIN CONFIG');
 console.log(connection[environment]);
 console.log('END CONFIG');
+*/
 
 const knexConnection = Knex(connection[environment]);
 

@@ -1,8 +1,10 @@
+const { Model } = require("objection");
 const BaseModel = require("./BaseModel");
+//const Author = require("./Author");
 
 class Todo extends BaseModel {
   static get tableName() {
-    return "todos";
+    return "t_todos";
   }
 
   static get jsonSchema() {
@@ -25,24 +27,33 @@ class Todo extends BaseModel {
     };
   }
 
+//*
   // This object defines the relations to other models.
   static get relationMappings() {
     return {
       author: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: Autor,
+        relation: Model.HasOneThroughRelation,
+        
+        // ВАЖНО!!!
+        // The related model. This can be either a Model subclass constructor or an
+        // absolute file path to a module that exports one. We use the file path version
+        // here to prevent require loops.
+
+        //modelClass: Author, // BAD
+        modelClass: __dirname + '/Author', // GOOD
+
         join: {
-		  from: 'todos.id',
+          from: "t_todos.id",
           through: {
-            from: 'author_todos.todo_id',
-            to: 'author_todos.author_id'
+            from: "t_author_todos.todo_id",
+            to: "t_author_todos.author_id"
           },
-          to: 'authors.id'
+          to: "t_authors.id"
         }
       }
     };
   }
-}
+//*/
 }
 
 module.exports = Todo;

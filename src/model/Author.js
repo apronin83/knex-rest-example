@@ -1,8 +1,11 @@
+const { Model } = require("objection");
 const BaseModel = require("./BaseModel");
+const Todo = require("./Todo");
 
 class Author extends BaseModel {
+//class Author extends Model {
   static get tableName() {
-    return "authors";
+    return "t_authors";
   }
 
   static get jsonSchema() {
@@ -21,20 +24,20 @@ class Author extends BaseModel {
   static get relationMappings() {
     return {
       todos: {
-        relation: Model.HasManyRelation,
+        relation: Model.ManyToManyRelation, //Model.HasManyRelation,
         modelClass: Todo,
         join: {
-          from: 'authors.id',
+          from: "t_authors.id",
           // Relation needs the `through` object to describe the join table.
           through: {
-            from: 'author_todos.author_id',
-            to: 'author_todos.todo_id'
+            from: "t_author_todos.author_id",
+            to: "t_author_todos.todo_id"
           },
-          to: 'todos.id'
+          to: "t_todos.id"
         }
       }
     };
   }
 }
 
-module.exports = Todo;
+module.exports = Author;

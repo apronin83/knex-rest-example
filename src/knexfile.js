@@ -17,6 +17,11 @@ module.exports = {
     connection: {
       filename: path.normalize(path.join(__dirname, "/db/dev.sqlite3"))
     },
+    pool: {
+      afterCreate: (conn, cb) => {
+        conn.run('PRAGMA foreign_keys = ON', cb);
+      }
+    },
     migrations: {
       tableName: "knex_migrations",
       directory: path.normalize(path.join(__dirname, "/db/migrations"))
