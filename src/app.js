@@ -2,7 +2,10 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 const dotenv = require("dotenv");
-const { Model } = require('objection');
+const { Model } = require("objection");
+
+// Models
+const Todo = require("./model/Todo");
 
 //-----------------------------------------
 
@@ -10,7 +13,7 @@ dotenv.config();
 
 //-----------------------------------------
 
-const knexConnection = require('./db/config');
+const knexConnection = require("./db/config");
 
 Model.knex(knexConnection);
 
@@ -22,33 +25,36 @@ app.use(bodyParser.json());
 
 //-----------------------------------------
 
+app.get("/todos/:id", async (req, res) => {
+  const todo = await Todo.query().findById(req.params.id);
+
+  if (todo) {
+    res.json({ todo });
+  } else {
+    re.status(404).json({});
+  }
+});
+
+//-----------------------------------------
 
 app.get("/todos", async (req, res) => {
+  console.log("Inner GET TODOS");
 
-    console.log('Inner GET TODOS');
+  const todos = await Todo.query();
 
-	const Todo = require("./model/Todo");
+  if (todos) {
+    //res.json({ todos });
 
-	const todo = await Todo.query().findOnce({
-			id: 1
-		});
-
-	if (todo) {
-		res.json({
-			todos: [{
-					id: todo.id,
-					text: todo.text
-				}
-			]});
-	} else {
-		re.status(404).json({});
-	}
+    res.send(todos);
+  } else {
+    re.status(404).json({});
+  }
 });
 
 //-----------------------------------------
 
 app.get("/*", (req, res) => {
-	res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 //-----------------------------------------

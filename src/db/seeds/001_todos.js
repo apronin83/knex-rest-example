@@ -13,6 +13,9 @@ exports.seed = function (knex, Promise) {
 				}, {
 					id: 3,
 					text: 'todo 3'
+				}, {
+					id: 4,
+					text: 'todo 4'
 				}
 			]);
 	});
