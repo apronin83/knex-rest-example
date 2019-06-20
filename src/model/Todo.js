@@ -27,20 +27,19 @@ class Todo extends BaseModel {
     };
   }
 
-//*
   // This object defines the relations to other models.
   static get relationMappings() {
     return {
       author: {
         relation: Model.HasOneThroughRelation,
-        
+
         // ВАЖНО!!!
         // The related model. This can be either a Model subclass constructor or an
         // absolute file path to a module that exports one. We use the file path version
         // here to prevent require loops.
 
         //modelClass: Author, // BAD
-        modelClass: __dirname + '/Author', // GOOD
+        modelClass: __dirname + "/Author", // GOOD
 
         join: {
           from: "t_todos.id",
@@ -53,7 +52,6 @@ class Todo extends BaseModel {
       }
     };
   }
-//*/
 }
 
 module.exports = Todo;

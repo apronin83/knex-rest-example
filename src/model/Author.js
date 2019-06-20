@@ -3,7 +3,6 @@ const BaseModel = require("./BaseModel");
 const Todo = require("./Todo");
 
 class Author extends BaseModel {
-//class Author extends Model {
   static get tableName() {
     return "t_authors";
   }
