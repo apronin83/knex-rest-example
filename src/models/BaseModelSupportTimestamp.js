@@ -6,7 +6,7 @@ class BaseModelSupportTimestamp extends Model {
   }
 
   static get timestamps() {
-    return true;
+    return false;
   }
 }
 

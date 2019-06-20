@@ -23,7 +23,7 @@ class Author extends BaseModel {
   static get relationMappings() {
     return {
       todos: {
-        relation: Model.ManyToManyRelation, //Model.HasManyRelation,
+        relation: Model.ManyToManyRelation,
         modelClass: Todo,
         join: {
           from: "t_authors.id",

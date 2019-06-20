@@ -7,6 +7,8 @@ const { Model } = require("objection");
 
 // Routers
 const common_router = require("./routers/common");
+const users_router = require("./routers/users");
+
 const authors_router = require("./routers/authors");
 const todos_router = require("./routers/todos");
 
@@ -29,6 +31,8 @@ app.use(bodyParser.json());
 //-----------------------------------------
 
 app.use(common_router);
+app.use("/users", users_router);
+
 app.use("/authors", authors_router);
 app.use("/todos", todos_router);
 

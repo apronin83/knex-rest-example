@@ -1,7 +1,7 @@
 const express = require("express");
 const asyncMiddleware = require("../utils/asyncMiddleware");
 // Model
-const Todo = require("../model/Todo");
+const Todo = require("../models/Todo");
 
 const router = express.Router();
 
