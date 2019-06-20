@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const asyncMiddleware = require("./utils/asyncMiddleware");
 const path = require("path");
 const dotenv = require("dotenv");
 const { Model } = require("objection");
@@ -25,66 +26,101 @@ const app = express();
 app.use(bodyParser.json());
 
 //-----------------------------------------
-//-----------------------------------------
 
-app.get("/todos/:id", async (req, res) => {
-  const todo = await Todo.query().findById(req.params.id);
-
-  if (todo) {
-    res.json({ todo });
-  } else {
-    re.status(404).json({});
-  }
-});
-
-//-----------------------------------------
-
-app.get("/todos", async (req, res) => {
-  console.log("Inner GET TODOS");
-
-  const todos = await Todo.query().eager('author').debug(true);
-
-  if (todos) {
-    //res.json({ todos });
-
-    res.send(todos);
-  } else {
-    re.status(404).json({});
-  }
-});
+app.use(
+  asyncMiddleware(async (req, res, next) => {
+    console.log("-------------------------------------");
+    console.log("Request URL:", req.originalUrl);
+    next();
+  }),
+  asyncMiddleware(async (req, res, next) => {
+    console.log("Request Type:", req.method);
+    next();
+  })
+);
 
 //-----------------------------------------
 //-----------------------------------------
 
-app.get("/authors/:id", async (req, res) => {
-  const author = await Author.query().findById(req.params.id);
+app.get(
+  "/todos/:id",
+  asyncMiddleware(async (req, res) => {
+    const todo = await Todo.query()
+      .findById(req.params.id)
+      .debug(true);
 
-  if (author) {
-    res.json({ author });
-  } else {
-    re.status(404).json({});
-  }
-});
+    if (todo) {
+      res.json({ todo });
+    } else {
+      re.status(404).json({});
+    }
+  })
+);
+
+//-----------------------------------------
+
+app.get(
+  "/todos",
+  asyncMiddleware(async (req, res) => {
+    const todos = await Todo.query()
+      .eager("author")
+      .debug(true);
+
+    if (todos) {
+      //res.json({ todos });
+
+      res.send(todos);
+    } else {
+      re.status(404).json({});
+    }
+  })
+);
+
+//-----------------------------------------
+//-----------------------------------------
+
+app.get(
+  "/authors/:id",
+  asyncMiddleware(async (req, res) => {
+    const author = await Author.query()
+      .findById(req.params.id)
+      .debug(true);
+
+    if (author) {
+      res.json({ author });
+    } else {
+      re.status(404).json({});
+    }
+  })
+);
 
 //-----------------------------------------
 
-app.get("/authors", async (req, res) => {
-  //const authors = await Author.query().allowEager('[todos, todos.author]').eager('[todos, todos.author]').debug(true);
-  const authors = await Author.query().allowEager('[todos, todos.[author]]').eager('[todos, todos.[author]]').debug(true);
+app.get(
+  "/authors",
+  asyncMiddleware(async (req, res) => {
+    const authors = await Author.query()
+      .allowEager("[todos, todos.[author]]")
+      .eager("[todos, todos.[author]]")
+      .debug(true);
 
-  if (authors) {
-    res.send(authors);
-  } else {
-    re.status(404).json({});
-  }
-});
+    if (authors) {
+      res.send(authors);
+    } else {
+      re.status(404).json({});
+    }
+  })
+);
 
 //-----------------------------------------
 //-----------------------------------------
 
-app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+app.get(
+  "/*",
+  asyncMiddleware(async (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+  })
+);
 
 //-----------------------------------------
 
