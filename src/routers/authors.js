@@ -11,6 +11,17 @@ const router = express.Router();
 // Authors
 
 //-----------------------------------------
+// SomeError
+
+function SomeError(message) {
+  this.name = "SomeError";
+  this.message = message || "Сообщение по умолчанию";
+  this.stack = new Error().stack;
+}
+SomeError.prototype = Object.create(Error.prototype);
+SomeError.prototype.constructor = SomeError;
+
+//-----------------------------------------
 // middleware that is specific to this router
 
 router.use(
@@ -21,31 +32,24 @@ router.use(
 );
 
 //-----------------------------------------
-// Create
-/*
+// Create author
+
 router.post(
   "/",
   asyncMiddleware(async (req, res) => {
-    const graph = req.body;
+    const author = await Author.query()
+      .insertAndFetch(req.body)
+      .debug(true);
 
-    // It's a good idea to wrap `insertGraph` call in a transaction since it
-    // may create multiple queries.
-    const insertedGraph = await transaction(Author.knex(), trx => {
-      return (
-        Author.query(trx)
-          // For security reasons, limit the relations that can be inserted.
-          //.allowInsert("[pets, children.[pets, movies], movies, parent]")
-          .insertGraph(graph)
-      );
-    });
-
-    res.send(insertedGraph);
+    res.send(author);
   })
 );
-*/
+
+//-----------------------------------------
+// Create author with todos list
 
 router.post(
-  "/",
+  "/complex",
   asyncMiddleware(async (req, res) => {
     const graph = req.body;
 
@@ -60,21 +64,15 @@ router.post(
       const gr = Author.query(trx)
         // For security reasons, limit the relations that can be inserted.
         .allowInsert("[todos]")
-        .insertGraphAndFetch(graph).debug(true);
-        
+        .insertGraphAndFetch(graph)
+        .debug(true);
+
       console.log("BEGIN GRAPH");
       console.log(gr);
       console.log("END GRAPH");
 
       return gr;
     });
-    //*/
-
-    /*
-    const insertedGraph = await Author.query()
-      .insertAndFetch(graph)
-      .debug(true);
-    */
 
     res.send(insertedGraph);
   })
@@ -86,10 +84,9 @@ router.post(
 router.patch(
   "/:id",
   asyncMiddleware(async (req, res) => {
-    const author = await Author.query().patchAndFetchById(
-      req.params.id,
-      req.body
-    ).debug(true);
+    const author = await Author.query()
+      .patchAndFetchById(req.params.id, req.body)
+      .debug(true);
 
     res.send(author);
   })
@@ -101,7 +98,46 @@ router.patch(
 router.delete(
   "/:id",
   asyncMiddleware(async (req, res) => {
-    await Author.query().deleteById(req.params.id).debug(true);
+    await Author.query()
+      .deleteById(req.params.id)
+      .onError(async (error, queryBuilder) => {
+        // Handle `SomeError` but let other errors go through.
+        if (error instanceof SomeError) {
+          // This will cause the query to be resolved with an object
+          // instead of throwing an error.
+          return { error: "some error occurred" };
+        } else {
+          return Promise.reject(error);
+        }
+      })
+      .debug(true);
+
+    res.send({});
+  })
+);
+
+//-----------------------------------------
+// Delete by id  with all todos of a author
+
+router.delete(
+  "/complex/:id",
+  asyncMiddleware(async (req, res) => {
+    await Author.query()
+      .findById(req.params.id)
+      .$relatedQuery("todos")
+      .delete()
+      .deleteById(req.params.id)
+      .onError(async (error, queryBuilder) => {
+        // Handle `SomeError` but let other errors go through.
+        if (error instanceof SomeError) {
+          // This will cause the query to be resolved with an object
+          // instead of throwing an error.
+          return { error: "some error occurred" };
+        } else {
+          return Promise.reject(error);
+        }
+      })
+      .debug(true);
 
     res.send({});
   })

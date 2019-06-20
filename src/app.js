@@ -36,6 +36,17 @@ app.use("/users", users_router);
 app.use("/authors", authors_router);
 app.use("/todos", todos_router);
 
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("------------");
+  console.error("Стек ошибки:");
+  console.error("------------");
+  
+  console.error(err.stack);
+
+  res.status(500).send("Что-то сломалось!");
+});
+
 //-----------------------------------------
 
 app.get(
