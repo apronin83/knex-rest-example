@@ -44,7 +44,7 @@ app.use((err, req, res, next) => {
   
   console.error(err.stack);
 
-  res.status(500).send("Что-то сломалось!");
+  res.status(500).send("Что-то сломалось! Смотри консоль.");
 });
 
 //-----------------------------------------

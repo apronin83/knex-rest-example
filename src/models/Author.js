@@ -1,6 +1,7 @@
 const { Model } = require("objection");
 const BaseModel = require("./BaseModel");
 const Todo = require("./Todo");
+const AuthorTodos = require("./AuthorTodos");
 
 class Author extends BaseModel {
   static get tableName() {
@@ -33,6 +34,14 @@ class Author extends BaseModel {
             to: "t_author_todos.todo_id"
           },
           to: "t_todos.id"
+        }
+      },
+      author_todos: {
+        relation: Model.HasManyRelation,
+        modelClass: AuthorTodos,
+        join: {
+          from: "t_authors.id",
+          to: "t_author_todos.author_id"
         }
       }
     };

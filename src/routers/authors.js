@@ -11,6 +11,12 @@ const router = express.Router();
 // Authors
 
 //-----------------------------------------
+
+function asArray(data) {
+  return Array.isArray(data) ? data : [data];
+}
+
+//-----------------------------------------
 // SomeError
 
 function SomeError(message) {
@@ -117,29 +123,86 @@ router.delete(
 );
 
 //-----------------------------------------
-// Delete by id  with all todos of a author
+// Delete by id with all todos of a author
 
 router.delete(
   "/complex/:id",
   asyncMiddleware(async (req, res) => {
-    await Author.query()
+    const author = await Author.query()
       .findById(req.params.id)
-      .$relatedQuery("todos")
-      .delete()
-      .deleteById(req.params.id)
-      .onError(async (error, queryBuilder) => {
-        // Handle `SomeError` but let other errors go through.
-        if (error instanceof SomeError) {
-          // This will cause the query to be resolved with an object
-          // instead of throwing an error.
-          return { error: "some error occurred" };
-        } else {
-          return Promise.reject(error);
-        }
-      })
       .debug(true);
 
-    res.send({});
+    console.log("author.constructor.name: ", author.constructor.name);
+
+    if (author) {
+      const author_todos = await author
+        .$relatedQuery("author_todos")
+        .debug(true);
+
+      //console.log("author_todos\n", author_todos);
+
+      if (author_todos) {
+        const author_todos_arr = asArray(author_todos);
+
+        author_todos_arr.forEach(async author_todo_elm => {
+          console.log(
+            "author_todo_elm.constructor.name: ",
+            author_todo_elm.constructor.name
+          );
+
+          const todos = author_todo_elm.$relatedQuery("todos").debug(true);
+
+          //console.log("todos\n", todos);
+
+          if (todos) {
+            const todos_arr = asArray(todos);
+
+            //console.log("todos_arr\n", todos_arr);
+
+            todos_arr.forEach(async todo_elm => {
+              console.log(
+                "todo_elm.constructor.name: ",
+                todo_elm.constructor.name
+              );
+
+              /*
+              todo_elm.then(model => {
+                console.log("model:", model);
+                //console.log("model.id:", model.$id());
+              });
+              //console.log("todo_elm.id:", todo_elm.$id());
+              */
+
+              todo_elm.map(async data => {
+                console.log(
+                  "todo_data.constructor.name: ",
+                  data.constructor.name
+                );
+
+                await data
+                  .$query()
+                  .delete()
+                  .debug(true);
+              });
+            });
+          }
+
+          await author_todo_elm
+            .$query()
+            .delete()
+            .debug(true);
+        });
+      }
+
+      await author
+        .$query()
+        .delete()
+        .debug(true);
+
+      res.send({});
+    } else {
+      res.status(404).json({});
+    }
   })
 );
 
@@ -174,7 +237,6 @@ router.get(
       .debug(true);
 
     if (author) {
-      //res.json({ author });
       res.send(author);
     } else {
       res.status(404).json({});
