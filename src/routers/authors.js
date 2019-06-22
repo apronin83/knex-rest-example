@@ -123,7 +123,7 @@ router.delete(
 );
 
 //-----------------------------------------
-// Delete by id with all todos of a author
+// Delete by id with all todos of a author + Transaction
 
 router.delete(
   "/complex/:id",
