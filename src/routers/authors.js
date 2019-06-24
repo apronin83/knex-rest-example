@@ -5,6 +5,7 @@ const { transaction } = require("objection");
 
 // Model
 const Author = require("../models/Author");
+const Todo = require("../models/Todo");
 
 const router = express.Router();
 
@@ -129,69 +130,30 @@ router.delete(
   "/complex/:id",
   asyncMiddleware(async (req, res) => {
     const author = await Author.query()
+      .skipUndefined()
       .findById(req.params.id)
       .debug(true);
 
-    console.log("author.constructor.name: ", author.constructor.name);
-
     if (author) {
-      const author_todos = await author
-        .$relatedQuery("author_todos")
-        .debug(true);
+      console.log("author.constructor.name: ", author.constructor.name);
 
-      //console.log("author_todos\n", author_todos);
+      let todo_ids = [];
 
-      if (author_todos) {
-        const author_todos_arr = asArray(author_todos);
+      const todos = await author.$relatedQuery("todos").map(async todo => {
+        await todo_ids.push(todo.$id());
+      });
 
-        author_todos_arr.forEach(async author_todo_elm => {
-          console.log(
-            "author_todo_elm.constructor.name: ",
-            author_todo_elm.constructor.name
-          );
-
-          const todos = author_todo_elm.$relatedQuery("todos").debug(true);
-
-          //console.log("todos\n", todos);
-
-          if (todos) {
-            const todos_arr = asArray(todos);
-
-            //console.log("todos_arr\n", todos_arr);
-
-            todos_arr.forEach(async todo_elm => {
-              console.log(
-                "todo_elm.constructor.name: ",
-                todo_elm.constructor.name
-              );
-
-              /*
-              todo_elm.then(model => {
-                console.log("model:", model);
-                //console.log("model.id:", model.$id());
-              });
-              //console.log("todo_elm.id:", todo_elm.$id());
-              */
-
-              todo_elm.map(async data => {
-                console.log(
-                  "todo_data.constructor.name: ",
-                  data.constructor.name
-                );
-
-                await data
-                  .$query()
-                  .delete()
-                  .debug(true);
-              });
+      if (todo_ids.length > 0) {
+        await author
+          .$relatedQuery("todos")
+          .unrelate()
+          .then(async () => {
+            await todo_ids.map(async todo_id => {
+              await Todo.query()
+                .deleteById(todo_id)
+                .debug(true);
             });
-          }
-
-          await author_todo_elm
-            .$query()
-            .delete()
-            .debug(true);
-        });
+          });
       }
 
       await author
