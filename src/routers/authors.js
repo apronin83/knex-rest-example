@@ -139,16 +139,26 @@ router.delete(
 
       let todo_ids = [];
 
+      /*
       const todos = await author.$relatedQuery("todos").map(async todo => {
         await todo_ids.push(todo.$id());
       });
+      */
+
+      const todos = asArray(await author.$relatedQuery("todos"));
+
+      if (todos.length > 0) {
+        for (let todo of todos) {
+          await todo_ids.push(todo.$id());
+        }
+      }
 
       if (todo_ids.length > 0) {
         await author
           .$relatedQuery("todos")
           .unrelate()
           .then(async () => {
-            for (todo_id of todo_ids) {
+            for (let todo_id of todo_ids) {
               await Todo.query()
                 .deleteById(todo_id)
                 .debug(true);
