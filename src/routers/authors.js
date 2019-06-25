@@ -9,6 +9,8 @@ const Todo = require("../models/Todo");
 
 const router = express.Router();
 
+const debug_mode = true;
+
 // Authors
 
 //-----------------------------------------
@@ -46,7 +48,7 @@ router.post(
   asyncMiddleware(async (req, res) => {
     const author = await Author.query()
       .insertAndFetch(req.body)
-      .debug(true);
+      .debug(debug_mode);
 
     res.send(author);
   })
@@ -72,7 +74,7 @@ router.post(
         // For security reasons, limit the relations that can be inserted.
         .allowInsert("[todos]")
         .insertGraphAndFetch(graph)
-        .debug(true);
+        .debug(debug_mode);
 
       console.log("BEGIN GRAPH");
       console.log(gr);
@@ -93,33 +95,9 @@ router.patch(
   asyncMiddleware(async (req, res) => {
     const author = await Author.query()
       .patchAndFetchById(req.params.id, req.body)
-      .debug(true);
+      .debug(debug_mode);
 
     res.send(author);
-  })
-);
-
-//-----------------------------------------
-// Delete by id
-
-router.delete(
-  "/:id",
-  asyncMiddleware(async (req, res) => {
-    await Author.query()
-      .deleteById(req.params.id)
-      .onError(async (error, queryBuilder) => {
-        // Handle `SomeError` but let other errors go through.
-        if (error instanceof SomeError) {
-          // This will cause the query to be resolved with an object
-          // instead of throwing an error.
-          return { error: "some error occurred" };
-        } else {
-          return Promise.reject(error);
-        }
-      })
-      .debug(true);
-
-    res.send({});
   })
 );
 
@@ -127,49 +105,32 @@ router.delete(
 // Delete by id with all todos of a author + Transaction
 
 router.delete(
-  "/complex/:id",
+  "/:id",
   asyncMiddleware(async (req, res) => {
     const author = await Author.query()
-      .skipUndefined()
       .findById(req.params.id)
-      .debug(true);
+      .debug(debug_mode);
 
     if (author) {
-      console.log("author.constructor.name: ", author.constructor.name);
-
-      let todo_ids = [];
-
-      /*
-      const todos = await author.$relatedQuery("todos").map(async todo => {
-        await todo_ids.push(todo.$id());
-      });
-      */
-
-      const todos = asArray(await author.$relatedQuery("todos"));
-
-      if (todos.length > 0) {
-        for (let todo of todos) {
-          await todo_ids.push(todo.$id());
-        }
-      }
-
-      if (todo_ids.length > 0) {
-        await author
-          .$relatedQuery("todos")
-          .unrelate()
-          .then(async () => {
-            for (let todo_id of todo_ids) {
-              await Todo.query()
-                .deleteById(todo_id)
-                .debug(true);
-            }
-          });
-      }
+      await author
+        .$relatedQuery("todos")
+        .delete()
+        .debug(debug_mode);
 
       await author
         .$query()
         .delete()
-        .debug(true);
+        .onError(async (error, queryBuilder) => {
+          // Handle `SomeError` but let other errors go through.
+          if (error instanceof SomeError) {
+            // This will cause the query to be resolved with an object
+            // instead of throwing an error.
+            return { error: "some error occurred" };
+          } else {
+            return Promise.reject(error);
+          }
+        })
+        .debug(debug_mode);
 
       res.send({});
     } else {
