@@ -148,11 +148,11 @@ router.delete(
           .$relatedQuery("todos")
           .unrelate()
           .then(async () => {
-            await todo_ids.map(async todo_id => {
+            for (todo_id of todo_ids) {
               await Todo.query()
                 .deleteById(todo_id)
                 .debug(true);
-            });
+            }
           });
       }
 
