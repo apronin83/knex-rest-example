@@ -149,7 +149,7 @@ router.get(
       .allowEager("[todos, todos.[author]]")
       //.eager("[todos, todos.[author]]") // Разрешаем и список todos и вложеного автора
       .eager("todos") // Разрешаем только список todos
-      .debug(true);
+      .debug(debug_mode);
 
     if (authors) {
       res.send(authors);
@@ -167,7 +167,7 @@ router.get(
   asyncMiddleware(async (req, res) => {
     const author = await Author.query()
       .findById(req.params.id)
-      .debug(true);
+      .debug(debug_mode);
 
     if (author) {
       res.send(author);
